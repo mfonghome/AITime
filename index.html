@@ -22,6 +22,21 @@
         <input id="address" name="address" type="text" required autocomplete="street-address" placeholder="Your address">
       </div>
 
+      <div class="form-row">
+        <label for="city">City</label>
+        <input id="city" name="city" type="text" required autocomplete="address-level2" placeholder="City">
+      </div>
+
+      <div class="form-row">
+        <label for="state">State</label>
+        <input id="state" name="state" type="text" required autocomplete="address-level1" placeholder="State">
+      </div>
+
+      <div class="form-row">
+        <label for="zip">ZIP</label>
+        <input id="zip" name="zip" type="text" required autocomplete="postal-code" pattern="\d{5}" inputmode="numeric" placeholder="ZIP code">
+      </div>
+
       <div class="buttons">
         <button type="submit">Submit</button>
         <button type="button" id="clearBtn">Clear</button>
@@ -41,7 +56,14 @@
       <div id="emptyMsg" class="muted">No saved entries yet.</div>
       <table id="savedTable" class="table" aria-label="Saved entries" hidden>
         <thead>
-          <tr><th style="width:30%">Name</th><th style="width:50%">Address</th><th style="width:20%">Actions</th></tr>
+          <tr>
+            <th style="width:20%">Name</th>
+            <th style="width:25%">Address</th>
+            <th style="width:15%">City</th>
+            <th style="width:10%">State</th>
+            <th style="width:10%">ZIP</th>
+            <th style="width:20%">Actions</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -61,6 +83,9 @@
     const emptyMsg = document.getElementById('emptyMsg');
     const exportBtn = document.getElementById('exportBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
+    const cityInput = document.getElementById('city');
+    const stateInput = document.getElementById('state');
+    const zipInput = document.getElementById('zip');
 
     function loadEntries() {
       try {
@@ -92,10 +117,16 @@
         const tr = document.createElement('tr');
         const tdName = document.createElement('td');
         const tdAddr = document.createElement('td');
+        const tdCity = document.createElement('td');
+        const tdState = document.createElement('td');
+        const tdZip = document.createElement('td');
         const tdAct = document.createElement('td');
 
         tdName.textContent = e.name;
         tdAddr.textContent = e.address;
+        tdCity.textContent = e.city || '';
+        tdState.textContent = e.state || '';
+        tdZip.textContent = e.zip || '';
 
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
@@ -111,6 +142,9 @@
         tdAct.appendChild(delBtn);
         tr.appendChild(tdName);
         tr.appendChild(tdAddr);
+        tr.appendChild(tdCity);
+        tr.appendChild(tdState);
+        tr.appendChild(tdZip);
         tr.appendChild(tdAct);
         tbody.appendChild(tr);
       });
@@ -120,14 +154,17 @@
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const address = document.getElementById('address').value.trim();
+      const city = cityInput.value.trim();
+      const state = stateInput.value.trim();
+      const zip = zipInput.value.trim();
 
-      if (!name || !address) {
-        result.textContent = 'Please fill in both fields.';
+      if (!name || !address || !city || !state || !zip) {
+        result.textContent = 'Please fill in all fields.';
         return;
       }
 
       const entries = loadEntries();
-      entries.push({ name, address, ts: new Date().toISOString() });
+      entries.push({ name, address, city, state, zip, ts: new Date().toISOString() });
       saveEntries(entries);
       renderEntries();
 
@@ -137,6 +174,7 @@
 
     clearBtn.addEventListener('click', () => {
       form.reset();
+      zipInput.setCustomValidity('');
       result.textContent = '';
     });
 
@@ -156,6 +194,33 @@
         localStorage.removeItem(STORAGE_KEY);
         renderEntries();
         result.textContent = '';
+      }
+    });
+
+    zipInput.addEventListener('input', () => {
+      const zip = zipInput.value.trim();
+      if (/^\d{5}$/.test(zip)) {
+        fetch(`https://api.zippopotam.us/us/${zip}`)
+          .then(res => {
+            if (!res.ok) throw new Error('Not found');
+            return res.json();
+          })
+          .then(data => {
+            const place = data.places[0];
+            cityInput.value = place['place name'];
+            stateInput.value = place['state abbreviation'];
+            zipInput.setCustomValidity('');
+          })
+          .catch(() => {
+            cityInput.value = '';
+            stateInput.value = '';
+            zipInput.setCustomValidity('Invalid ZIP code');
+            zipInput.reportValidity();
+          });
+      } else {
+        cityInput.value = '';
+        stateInput.value = '';
+        zipInput.setCustomValidity('');
       }
     });
 
