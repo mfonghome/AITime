@@ -9,7 +9,7 @@
 <body>
   <main class="card" role="main">
     <h1>Hello, World!</h1>
-    <p class="subtitle">A tiny demo form.</p>
+    <p class="subtitle">A tiny demo form with local storage.</p>
 
     <form id="helloForm" novalidate>
       <div class="form-row">
@@ -30,13 +30,91 @@
 
     <div id="result" class="result" role="status" aria-live="polite"></div>
 
+    <section class="saved">
+      <div class="saved__header">
+        <h2>Saved locally</h2>
+        <div class="saved__actions">
+          <button id="exportBtn" type="button" class="secondary">Export JSON</button>
+          <button id="clearAllBtn" type="button" class="danger">Clear All</button>
+        </div>
+      </div>
+      <div id="emptyMsg" class="muted">No saved entries yet.</div>
+      <table id="savedTable" class="table" aria-label="Saved entries" hidden>
+        <thead>
+          <tr><th style="width:30%">Name</th><th style="width:50%">Address</th><th style="width:20%">Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
     <footer class="footer">© mfonghome/AITime</footer>
   </main>
 
   <script>
+    const STORAGE_KEY = 'aitime_submissions_v1';
+
     const form = document.getElementById('helloForm');
     const clearBtn = document.getElementById('clearBtn');
     const result = document.getElementById('result');
+    const savedTable = document.getElementById('savedTable');
+    const tbody = savedTable.querySelector('tbody');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const exportBtn = document.getElementById('exportBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    function loadEntries() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function renderEntries() {
+      const entries = loadEntries();
+      tbody.innerHTML = '';
+
+      if (!entries.length) {
+        savedTable.hidden = true;
+        emptyMsg.style.display = 'block';
+        return;
+      }
+
+      savedTable.hidden = false;
+      emptyMsg.style.display = 'none';
+
+      entries.forEach((e, idx) => {
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td');
+        const tdAddr = document.createElement('td');
+        const tdAct = document.createElement('td');
+
+        tdName.textContent = e.name;
+        tdAddr.textContent = e.address;
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', () => {
+          const next = loadEntries();
+          next.splice(idx, 1);
+          saveEntries(next);
+          renderEntries();
+        });
+
+        tdAct.appendChild(delBtn);
+        tr.appendChild(tdName);
+        tr.appendChild(tdAddr);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+    }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -47,13 +125,42 @@
         result.textContent = 'Please fill in both fields.';
         return;
       }
-      result.textContent = `Thanks, ${name}! We captured your address: ${address}.`;
+
+      const entries = loadEntries();
+      entries.push({ name, address, ts: new Date().toISOString() });
+      saveEntries(entries);
+      renderEntries();
+
+      result.textContent = `Saved locally for ${name}.`;
+      form.reset();
     });
 
     clearBtn.addEventListener('click', () => {
       form.reset();
       result.textContent = '';
     });
+
+    exportBtn.addEventListener('click', () => {
+      const data = JSON.stringify(loadEntries(), null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'aitime-submissions.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (confirm('Delete all saved entries from this browser?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderEntries();
+        result.textContent = '';
+      }
+    });
+
+    // Render existing on load
+    renderEntries();
   </script>
 </body>
 </html>
