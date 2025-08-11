@@ -1,16 +1,53 @@
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
+:root { --radius: 16px; --pad: 24px; --gap: 12px; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: system-ui, sans-serif;
-  text-align: center;
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f6f7f9;
+  color: #111;
+  display: flex; align-items: center; justify-content: center;
 }
+.card {
+  width: min(640px, 92vw);
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  padding: clamp(16px, 3vw, var(--pad));
+}
+h1 { margin: 0 0 4px; font-size: clamp(24px, 4vw, 32px); }
+.subtitle { margin: 0 0 20px; color: #444; }
 
-h1 {
-  font-size: clamp(2rem, 8vw, 4rem);
+.form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+label { font-weight: 600; }
+input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  font-size: 16px;
+}
+input[type="text"]:focus { outline: 2px solid #99c2ff; border-color: #99c2ff; }
+
+.buttons { display: flex; gap: var(--gap); margin-top: 6px; }
+button {
+  appearance: none;
+  border: 1px solid #d0d7de;
+  background: #fbfbfb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 16px; cursor: pointer;
+}
+button:hover { background: #f0f2f5; }
+.result { margin-top: 14px; min-height: 1.25em; }
+
+.footer { margin-top: 18px; font-size: 12px; color: #666; text-align: center; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #0b0f14; color: #e8e8e8; }
+  .card { background: #0f1620; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+  input[type="text"] { background: #0b0f14; color: #e8e8e8; border-color: #2b3440; }
+  input[type="text"]:focus { outline-color: #3b82f6; border-color: #3b82f6; }
+  button { background: #14202b; border-color: #2b3440; color: #e8e8e8; }
+  button:hover { background: #192534; }
+  .subtitle, .footer { color: #a8b3c2; }
 }

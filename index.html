@@ -1,12 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hello, World!</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hello World</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, World!</h1>
+  <main class="card" role="main">
+    <h1>Hello, World!</h1>
+    <p class="subtitle">A tiny demo form.</p>
+
+    <form id="helloForm" novalidate>
+      <div class="form-row">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required autocomplete="name" placeholder="Your name">
+      </div>
+
+      <div class="form-row">
+        <label for="address">Address</label>
+        <input id="address" name="address" type="text" required autocomplete="street-address" placeholder="Your address">
+      </div>
+
+      <div class="buttons">
+        <button type="submit">Submit</button>
+        <button type="button" id="clearBtn">Clear</button>
+      </div>
+    </form>
+
+    <div id="result" class="result" role="status" aria-live="polite"></div>
+
+    <footer class="footer">© mfonghome/AITime</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById('helloForm');
+    const clearBtn = document.getElementById('clearBtn');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+
+      if (!name || !address) {
+        result.textContent = 'Please fill in both fields.';
+        return;
+      }
+      result.textContent = `Thanks, ${name}! We captured your address: ${address}.`;
+    });
+
+    clearBtn.addEventListener('click', () => {
+      form.reset();
+      result.textContent = '';
+    });
+  </script>
 </body>
 </html>
